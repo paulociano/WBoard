@@ -18,8 +18,10 @@ function TaskCard({ task }) {
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="task-card">
       <p className="task-title">{task.titulo}</p>
       <div className="task-details">
-        <span className="task-project">{task.nome_projeto || 'Sem projeto'}</span>
-        <span className="task-assignee">@{task.nome_responsavel || 'Ninguém'}</span>
+        {/* Ícone adicionado ao projeto */}
+        <span className="task-project">🏢 {task.nome_projeto || 'Sem projeto'}</span>
+        {/* Ícone adicionado ao responsável */}
+        <span className="task-assignee">👤 @{task.nome_responsavel || 'Ninguém'}</span>
       </div>
       <p className="task-status-time">⏱️ {timeInStatus}</p>
     </div>
@@ -72,6 +74,10 @@ function App() {
   const [selectedUserId, setSelectedUserId] = useState('all');
 
   useEffect(() => {
+    document.title = 'Worqboard Kanban';
+  }, []);
+
+  useEffect(() => {
     fetchAllData();
   }, []);
 
@@ -106,7 +112,7 @@ function App() {
     try {
         await axios.post('http://localhost:3000/api/tasks', taskData);
         setTaskModalOpen(false);
-        fetchAllData(); // Recarrega tudo para mostrar a nova tarefa
+        fetchAllData();
     } catch (error) {
         console.error("Erro ao criar tarefa:", error);
         alert("Falha ao criar a tarefa.");
@@ -117,10 +123,24 @@ function App() {
     try {
         await axios.post('http://localhost:3000/api/projects', projectData);
         setProjectModalOpen(false);
-        fetchAllData(); // Recarrega tudo para mostrar o novo projeto no filtro
+        fetchAllData();
     } catch (error) {
         console.error("Erro ao criar projeto:", error);
         alert("Falha ao criar o projeto.");
+    }
+  };
+
+  const handleClearCompleted = async () => {
+    if (!window.confirm('Você tem certeza que deseja apagar permanentemente todas as tarefas concluídas?')) {
+      return;
+    }
+    try {
+      await axios.delete('http://localhost:3000/api/tasks/completed');
+      setAllTasks(currentTasks => currentTasks.filter(task => task.status !== 'Concluído'));
+      alert('Tarefas concluídas foram apagadas!');
+    } catch (error) {
+      console.error('Erro ao limpar tarefas:', error);
+      alert('Não foi possível apagar as tarefas.');
     }
   };
 
@@ -155,18 +175,20 @@ function App() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>Meu Kanban Worqboard</h1>
         <div className="toolbar">
+          {/* Ícones adicionados aos filtros e botões */}
+          <span>🏢</span>
           <select value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
             <option value="all">Todos os Projetos</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
           </select>
+          <span>👤</span>
           <select value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)}>
             <option value="all">Todos os Usuários</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.nome || u.numero_whatsapp}</option>)}
           </select>
-          <button onClick={() => setTaskModalOpen(true)}>+ Nova Tarefa</button>
-          <button onClick={() => setProjectModalOpen(true)}>+ Novo Projeto</button>
+          <button onClick={() => setTaskModalOpen(true)}>➕ Nova Tarefa</button>
+          <button onClick={() => setProjectModalOpen(true)}>➕ Novo Projeto</button>
         </div>
       </header>
       
@@ -174,7 +196,13 @@ function App() {
         <div className="board-container">
           <Column id="column-pending" title="🔴 Pendente" tasks={pendingTasks} />
           <Column id="column-inprogress" title="🟡 Em Andamento" tasks={inProgressTasks} />
-          <Column id="column-completed" title="🟢 Concluídas" tasks={completedTasks} />
+          <Column id="column-completed" title="🟢 Concluídas" tasks={completedTasks}>
+            {completedTasks.length > 0 && (
+              <button onClick={handleClearCompleted} className="clear-button">
+                Limpar
+              </button>
+            )}
+          </Column>
         </div>
       </DndContext>
 

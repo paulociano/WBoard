@@ -1,4 +1,3 @@
-// taskService.js
 const db = require('./db');
 
 async function createTask(titulo, responsavelId, projetoId = null, prazoFinal = null) {
@@ -9,17 +8,33 @@ async function createTask(titulo, responsavelId, projetoId = null, prazoFinal = 
   return result.rows[0];
 }
 
-async function getTasksByUser(responsavelId, projetoId = null) {
-  let query = "SELECT * FROM tarefas WHERE responsavel_id = $1 AND status != 'Concluído'";
-  const params = [responsavelId];
-  if (projetoId) {
-    query += ' AND projeto_id = $2';
-    params.push(projetoId);
-  }
-  query += ' ORDER BY id ASC';
-  const result = await db.query(query, params);
+/**
+ * Busca todas as tarefas pendentes de um usuário, juntando dados do projeto e do responsável.
+ * As tarefas são ordenadas por projeto para facilitar o agrupamento.
+ * @param {number} userId O ID do usuário que está pedindo a lista.
+ * @returns {Promise<Array>} Uma lista de tarefas com detalhes do projeto e do responsável.
+ */
+async function getTasksByUser(userId) {
+  const result = await db.query(
+    `SELECT
+        t.id,
+        t.titulo,
+        t.status,
+        t.prazo_final,
+        t.status_alterado_em,
+        p.nome as nome_projeto,
+        -- CORREÇÃO: Usa COALESCE para mostrar o número do WhatsApp se o nome for nulo ou vazio
+        COALESCE(NULLIF(u.nome, ''), u.numero_whatsapp) as nome_responsavel
+     FROM tarefas t
+     LEFT JOIN projetos p ON t.projeto_id = p.id
+     LEFT JOIN usuarios u ON t.responsavel_id = u.id
+     WHERE t.responsavel_id = $1 AND t.status != 'Concluído'
+     ORDER BY p.nome ASC, t.id ASC`,
+    [userId]
+  );
   return result.rows;
 }
+
 
 async function updateTaskStatus(taskId, newStatus) {
   const result = await db.query('UPDATE tarefas SET status = $1, status_alterado_em = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *', [newStatus, taskId]);
@@ -46,7 +61,6 @@ async function deleteCompletedTasks() {
     return result.rowCount;
 }
 
-// CORREÇÃO APLICADA AQUI: Garantimos que todas as funções estão sendo exportadas
 module.exports = { 
   createTask, 
   getTasksByUser, 

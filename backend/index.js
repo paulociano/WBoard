@@ -255,8 +255,8 @@ app.post('/webhook', async (req, res) => {
                     // Lógica de Tempo no Status
                     let tempoNoStatus = '';
                     if (tarefa.status_alterado_em) {
-                        const tempoAtras = formatDistanceToNow(new Date(tarefa.status_alterado_em), { addSuffix: true, locale: ptBR });
-                        tempoNoStatus = `(há ${tempoAtras.replace('aproximadamente ','')})`;
+                      const tempoAtras = formatDistanceToNow(new Date(tarefa.status_alterado_em), { addSuffix: true, locale: ptBR });
+                      tempoNoStatus = `(${tempoAtras.replace('aproximadamente ','')})`;
                     }
 
                     // Lógica do Prazo

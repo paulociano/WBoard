@@ -1,54 +1,77 @@
+/* Reset e Estilos Base */
 body {
   background-color: #f4f5f7;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   margin: 0;
-  padding: 20px;
+  padding: 0;
 }
 
+/* Layout Principal da Aplicação */
 .app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Cabeçalho Fixo com a Barra de Ferramentas */
+.app-header {
+  padding: 10px 20px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Sombra mais suave */
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.toolbar {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-h1 {
-  color: #172b4d;
-}
-
-.app-header {
-  margin-bottom: 20px;
-}
-
-/* --- ESTILO DA NOVA BARRA DE FERRAMENTAS --- */
-.toolbar {
   display: flex;
-  gap: 10px;
+  gap: 12px; /* Espaçamento ajustado */
   align-items: center;
-  padding: 10px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 1px rgba(9,30,66,.15);
 }
 
+/* --- NOVO ESTILO MINIMALISTA PARA A BARRA DE FERRAMENTAS --- */
 .toolbar select, .toolbar button {
   padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #dfe1e6;
-  background-color: #091E42; /* Cor azul escuro do título */
-  color: white;
+  border-radius: 6px; /* Bordas mais arredondadas */
+  border: none; /* Sem bordas */
+  background-color: #f0f2f5; /* Fundo mais claro e neutro */
+  color: #44546f; /* Texto escuro para contraste */
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 500; /* Peso da fonte ajustado */
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* Espaço entre o ícone e o texto */
+  transition: background-color 0.2s ease;
+}
+
+.toolbar button {
+  background-color: #091E42;
+  color: white;
+}
+
+.toolbar select:hover, .toolbar button:hover {
+  background-color: #dfe1e6; /* Efeito hover sutil */
 }
 
 .toolbar button:hover {
-  background-color: #0052cc; /* Um azul um pouco mais claro no hover */
+  background-color: #0052cc;
 }
-/* ----------------------------------------- */
+/* -------------------------------------------------------- */
 
+/* Container do Quadro Kanban */
 .board-container {
+  flex-grow: 1;
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  padding: 20px;
+  overflow-x: auto;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .column {
@@ -89,14 +112,17 @@ h1 {
 .task-title {
   font-weight: 600;
   margin: 0 0 8px 0;
+  color: #172b4d;
 }
 
 .task-details {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
+/* --- NOVO ESTILO PARA OS DETALHES COM ÍCONES --- */
 .task-project, .task-assignee {
   font-size: 12px;
   color: #5e6c84;
@@ -104,9 +130,11 @@ h1 {
   padding: 2px 6px;
   background-color: #f4f5f7;
   border-radius: 3px;
-  display: inline-block;
-  margin-right: 5px;
+  display: flex; /* Alinha o ícone com o texto */
+  align-items: center;
+  gap: 4px; /* Espaço entre o ícone e o texto */
 }
+/* --------------------------------------------- */
 
 .task-status-time {
   font-size: 12px;
@@ -115,7 +143,7 @@ h1 {
 }
 
 .clear-button {
-  background-color: #e2e4e9;
+  background-color: #f0f2f5;
   border: none;
   border-radius: 4px;
   color: #5e6c84;
@@ -134,7 +162,6 @@ h1 {
   font-weight: bold;
 }
 
-/* --- ESTILOS PARA O MODAL --- */
 .modal-overlay {
   position: fixed;
   top: 0;

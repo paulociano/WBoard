@@ -1,3 +1,4 @@
+// src/App.jsx (Versão Final com Coluna "Concluídas")
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DndContext, closestCenter } from '@dnd-kit/core';
@@ -5,20 +6,10 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import './App.css';
 
-// Componente para o Card da Tarefa (agora com lógica de drag)
+// Componente TaskCard (sem alterações)
 function TaskCard({ task }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: task.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="task-card">
@@ -29,7 +20,7 @@ function TaskCard({ task }) {
   );
 }
 
-// Componente para a Coluna
+// Componente Column (sem alterações)
 function Column({ id, title, tasks }) {
   return (
     <div className="column">
@@ -42,7 +33,6 @@ function Column({ id, title, tasks }) {
     </div>
   );
 }
-
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -64,61 +54,49 @@ function App() {
     fetchTasks();
   }, []);
 
-  // Função que será chamada quando um drag é completado
   function handleDragEnd(event) {
     const { active, over } = event;
-
-    // Se o card não foi movido para uma coluna válida, não faz nada
     if (!over) return;
 
-    // Pega a tarefa que foi movida
     const activeTask = tasks.find(t => t.id === active.id);
 
-    // Pega o status da coluna de destino
-    const newStatus = over.id === 'column-pending' ? 'A Fazer' : 'Em Andamento';
+    // Mapeia o ID da coluna para o status correspondente
+    let newStatus = activeTask.status; // Mantém o status atual por padrão
+    if (over.id === 'column-pending') newStatus = 'A Fazer';
+    if (over.id === 'column-inprogress') newStatus = 'Em Andamento';
+    if (over.id === 'column-completed') newStatus = 'Concluído';
 
-    // Só faz a atualização se o status realmente mudou
     if (activeTask && activeTask.status !== newStatus) {
+        setTasks((currentTasks) => currentTasks.map(t => 
+            t.id === active.id ? { ...t, status: newStatus } : t
+        ));
 
-        // 1. Atualização Otimista da UI:
-        // Movemos o card visualmente na tela ANTES da resposta da API.
-        // Isso faz a interface parecer instantânea para o usuário.
-        setTasks((currentTasks) => {
-            const updatedTasks = currentTasks.map(t => {
-                if (t.id === active.id) {
-                    return { ...t, status: newStatus };
-                }
-                return t;
+        axios.patch(`http://localhost:3000/api/tasks/${active.id}/status`, { status: newStatus })
+            .then(response => console.log('Status atualizado com sucesso!', response.data))
+            .catch(error => {
+                console.error('Erro ao atualizar o status:', error);
+                alert('Ocorreu um erro ao salvar a alteração.');
+                // Aqui poderíamos reverter o estado visual para a posição original
             });
-            return updatedTasks;
-        });
-
-        // 2. Chamada à API para salvar a mudança no banco de dados:
-        axios.patch(`http://localhost:3000/api/tasks/${active.id}/status`, {
-            status: newStatus
-        }).then(response => {
-            console.log('Status atualizado com sucesso no backend!', response.data);
-        }).catch(error => {
-            console.error('Erro ao atualizar o status:', error);
-            // Opcional: aqui você poderia reverter o estado visual se a API falhar
-            alert('Ocorreu um erro ao salvar a alteração. Por favor, recarregue a página.');
-        });
     }
   }
 
   if (loading) return <div>Carregando...</div>;
   if (error) return <div className="error">{error}</div>;
 
+  // Filtra as tarefas para cada uma das três colunas
   const pendingTasks = tasks.filter(task => task.status === 'A Fazer');
   const inProgressTasks = tasks.filter(task => task.status === 'Em Andamento');
+  const completedTasks = tasks.filter(task => task.status === 'Concluído');
 
   return (
     <div className="app-container">
-      <h1>Gestão de Projetos - WBoard</h1>
+      <h1>Meu Kanban Worqboard</h1>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="board-container">
           <Column id="column-pending" title="🔴 Pendente" tasks={pendingTasks} />
           <Column id="column-inprogress" title="🟡 Em Andamento" tasks={inProgressTasks} />
+          <Column id="column-completed" title="🟢 Concluídas (Últimas 24h)" tasks={completedTasks} />
         </div>
       </DndContext>
     </div>

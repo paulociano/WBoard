@@ -8,11 +8,17 @@ const { updateTaskStatus } = require('../taskService');
 router.get('/tasks', async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT t.*, p.nome as nome_projeto, u.nome as nome_responsavel
+      `SELECT
+          t.*,
+          p.nome as nome_projeto,
+          u.nome as nome_responsavel
        FROM tarefas t
        LEFT JOIN projetos p ON t.projeto_id = p.id
        LEFT JOIN usuarios u ON t.responsavel_id = u.id
-       WHERE t.status != 'Concluído'
+       WHERE
+          t.status != 'Concluído'
+          OR
+          (t.status = 'Concluído' AND t.status_alterado_em >= NOW() - INTERVAL '1 day')
        ORDER BY t.id ASC`
     );
     res.json(result.rows);

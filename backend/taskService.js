@@ -9,44 +9,20 @@ async function createTask(titulo, responsavelId, projetoId = null, prazoFinal = 
   return result.rows[0];
 }
 
-/**
- * Busca todas as tarefas pendentes de um usuário, juntando dados do projeto e do responsável.
- * As tarefas são ordenadas por projeto para facilitar o agrupamento.
- * @param {number} userId O ID do usuário que está pedindo a lista.
- * @returns {Promise<Array>} Uma lista de tarefas com detalhes do projeto e do responsável.
- */
-async function getTasksByUser(userId) {
-  const result = await db.query(
-    `SELECT
-        t.id,
-        t.titulo,
-        t.status,
-        t.prazo_final,
-        t.status_alterado_em,
-        p.nome as nome_projeto,
-        u.nome as nome_responsavel
-     FROM tarefas t
-     LEFT JOIN projetos p ON t.projeto_id = p.id
-     LEFT JOIN usuarios u ON t.responsavel_id = u.id
-     WHERE t.responsavel_id = $1 AND t.status != 'Concluído'
-     ORDER BY p.nome ASC, t.id ASC`,
-    [userId]
-  );
+async function getTasksByUser(responsavelId, projetoId = null) {
+  let query = "SELECT * FROM tarefas WHERE responsavel_id = $1 AND status != 'Concluído'";
+  const params = [responsavelId];
+  if (projetoId) {
+    query += ' AND projeto_id = $2';
+    params.push(projetoId);
+  }
+  query += ' ORDER BY id ASC';
+  const result = await db.query(query, params);
   return result.rows;
 }
 
-/**
- * Atualiza o status de uma tarefa específica e o timestamp da mudança.
- * @param {number} taskId O ID da tarefa a ser atualizada.
- * @param {string} newStatus O novo status para a tarefa.
- * @returns {Promise<object|null>} O objeto da tarefa atualizada ou null se não for encontrada.
- */
 async function updateTaskStatus(taskId, newStatus) {
-  const result = await db.query(
-    // Agora atualizamos o status E o timestamp da mudança
-    'UPDATE tarefas SET status = $1, status_alterado_em = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
-    [newStatus, taskId]
-  );
+  const result = await db.query('UPDATE tarefas SET status = $1, status_alterado_em = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *', [newStatus, taskId]);
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
@@ -65,4 +41,18 @@ async function getTaskSummary() {
   return result.rows;
 }
 
-module.exports = { createTask, getTasksByUser, updateTaskStatus, editTaskTitle, deleteTask, getTaskSummary };
+async function deleteCompletedTasks() {
+    const result = await db.query("DELETE FROM tarefas WHERE status = 'Concluído'");
+    return result.rowCount;
+}
+
+// CORREÇÃO APLICADA AQUI: Garantimos que todas as funções estão sendo exportadas
+module.exports = { 
+  createTask, 
+  getTasksByUser, 
+  updateTaskStatus, 
+  editTaskTitle, 
+  deleteTask, 
+  getTaskSummary,
+  deleteCompletedTasks
+};

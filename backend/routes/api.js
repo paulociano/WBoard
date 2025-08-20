@@ -1,9 +1,8 @@
-// backend/routes/api.js
 const express = require('express');
 const db = require('../db');
-const { updateTaskStatus, deleteCompletedTasks } = require('../taskService');
-const { listProjects } = require('../projectService'); // Importa a função de listar projetos
-const { listAllUsers } = require('../userService'); // Importa a nova função de listar usuários
+const { updateTaskStatus, deleteCompletedTasks, createTask } = require('../taskService');
+const { listProjects, createProject } = require('../projectService');
+const { listAllUsers } = require('../userService');
 const router = express.Router();
 
 // Rota para buscar todas as tarefas
@@ -26,8 +25,6 @@ router.get('/tasks', async (req, res) => {
   }
 });
 
-// --- NOVAS ROTAS PARA OS FILTROS ---
-
 // Rota para buscar todos os projetos ativos
 router.get('/projects', async (req, res) => {
     try {
@@ -46,6 +43,33 @@ router.get('/users', async (req, res) => {
         res.json(users);
     } catch (error) {
         console.error('Erro ao buscar usuários via API:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// --- NOVAS ROTAS POST PARA CRIAÇÃO ---
+
+// Rota para criar uma nova tarefa
+router.post('/tasks', async (req, res) => {
+    const { titulo, responsavelId, projetoId } = req.body;
+    try {
+        // Reutilizamos a função do taskService que o bot do WhatsApp já usa!
+        const newTask = await createTask(titulo, responsavelId, projetoId, null);
+        res.status(201).json(newTask); // 201 Created
+    } catch (error) {
+        console.error('Erro ao criar tarefa via API:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para criar um novo projeto
+router.post('/projects', async (req, res) => {
+    const { nome } = req.body;
+    try {
+        const newProject = await createProject(nome);
+        res.status(201).json(newProject);
+    } catch (error) {
+        console.error('Erro ao criar projeto via API:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });

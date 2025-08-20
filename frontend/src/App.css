@@ -14,6 +14,37 @@ h1 {
   color: #172b4d;
 }
 
+.app-header {
+  margin-bottom: 20px;
+}
+
+/* --- ESTILO DA NOVA BARRA DE FERRAMENTAS --- */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 1px rgba(9,30,66,.15);
+}
+
+.toolbar select, .toolbar button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #dfe1e6;
+  background-color: #091E42; /* Cor azul escuro do título */
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background-color: #0052cc; /* Um azul um pouco mais claro no hover */
+}
+/* ----------------------------------------- */
+
 .board-container {
   display: flex;
   gap: 20px;
@@ -28,10 +59,17 @@ h1 {
   flex-shrink: 0;
 }
 
-.column h2 {
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.column-header h2 {
+  padding: 0;
   font-size: 16px;
   color: #172b4d;
-  padding: 0 10px;
 }
 
 .task-list {
@@ -51,7 +89,12 @@ h1 {
 .task-title {
   font-weight: 600;
   margin: 0 0 8px 0;
-  color: black;
+}
+
+.task-details {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
 }
 
 .task-project, .task-assignee {
@@ -65,20 +108,10 @@ h1 {
   margin-right: 5px;
 }
 
-.error {
-  color: red;
-  font-weight: bold;
-}
-
-.column-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10px;
-}
-
-.column-header h2 {
-  padding: 0;
+.task-status-time {
+  font-size: 12px;
+  color: #5e6c84;
+  margin: 0;
 }
 
 .clear-button {
@@ -96,48 +129,78 @@ h1 {
   background-color: #d6d8de;
 }
 
-.app-header {
-  margin-bottom: 20px;
+.error {
+  color: red;
+  font-weight: bold;
 }
 
-.toolbar {
+/* --- ESTILOS PARA O MODAL --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  gap: 10px;
+  justify-content: center;
   align-items: center;
-  padding: 10px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 1px rgba(9,30,66,.15);
+  z-index: 1000;
 }
 
-.toolbar select, .toolbar button {
-  padding: 8px 12px;
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-weight: bold;
+}
+
+.modal-form input, .modal-form select {
+  padding: 8px;
+  border: 1px solid #ccc;
   border-radius: 4px;
-  border: 1px solid #dfe1e6;
-  background-color: #f4f5f7;
   font-size: 14px;
 }
 
-.toolbar button {
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-actions .submit {
   background-color: #0052cc;
   color: white;
-  font-weight: bold;
-  cursor: pointer;
-  border-color: #0052cc;
 }
 
-.toolbar button:hover {
-  background-color: #0065ff;
-}
-
-.task-details {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 8px;
-}
-
-.task-status-time {
-  font-size: 12px;
-  color: #5e6c84;
-  margin: 0;
+.modal-actions .cancel {
+  background-color: #e2e4e9;
+  color: #172b4d;
 }

@@ -12,11 +12,7 @@ import './App.css';
 function TaskCard({ task }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
-
-  // Calcula o tempo no status atual
-  const timeInStatus = task.status_alterado_em
-    ? formatDistanceToNow(new Date(task.status_alterado_em), { addSuffix: true, locale: ptBR })
-    : '';
+  const timeInStatus = task.status_alterado_em ? formatDistanceToNow(new Date(task.status_alterado_em), { addSuffix: true, locale: ptBR }) : '';
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="task-card">
@@ -47,47 +43,57 @@ function Column({ id, title, tasks, children }) {
   );
 }
 
+function Modal({ isOpen, onClose, title, children }) {
+    if (!isOpen) return null;
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <h2>{title}</h2>
+                {children}
+            </div>
+        </div>
+    );
+}
+
 // --- Componente Principal da Aplicação ---
 
 function App() {
-  // Estados de dados
   const [allTasks, setAllTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
   
-  // Estados de UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // const [isTaskModalOpen, setTaskModalOpen] = useState(false); // Comentado para remover o aviso
-
-  // Estados de filtro
+  
+  const [isTaskModalOpen, setTaskModalOpen] = useState(false);
+  const [isProjectModalOpen, setProjectModalOpen] = useState(false);
+  
   const [selectedProjectId, setSelectedProjectId] = useState('all');
   const [selectedUserId, setSelectedUserId] = useState('all');
 
-  // Busca todos os dados da API quando o componente é montado
   useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        setLoading(true);
-        const [tasksRes, projectsRes, usersRes] = await Promise.all([
-          axios.get('http://localhost:3000/api/tasks'),
-          axios.get('http://localhost:3000/api/projects'),
-          axios.get('http://localhost:3000/api/users'),
-        ]);
-        setAllTasks(tasksRes.data);
-        setProjects(projectsRes.data);
-        setUsers(usersRes.data);
-      } catch (err) {
-        setError('Não foi possível carregar os dados. O servidor backend está rodando e as novas rotas da API foram implementadas?');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAllData();
   }, []);
 
-  // Lógica de filtragem
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      const [tasksRes, projectsRes, usersRes] = await Promise.all([
+        axios.get('http://localhost:3000/api/tasks'),
+        axios.get('http://localhost:3000/api/projects'),
+        axios.get('http://localhost:3000/api/users'),
+      ]);
+      setAllTasks(tasksRes.data);
+      setProjects(projectsRes.data);
+      setUsers(usersRes.data);
+    } catch (err) {
+      setError('Não foi possível carregar os dados.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredTasks = useMemo(() => {
     return allTasks.filter(task => {
       const projectMatch = selectedProjectId === 'all' || task.projeto_id === parseInt(selectedProjectId);
@@ -96,12 +102,31 @@ function App() {
     });
   }, [allTasks, selectedProjectId, selectedUserId]);
 
-  // Função que é chamada quando o usuário solta uma tarefa
+  const handleCreateTask = async (taskData) => {
+    try {
+        await axios.post('http://localhost:3000/api/tasks', taskData);
+        setTaskModalOpen(false);
+        fetchAllData(); // Recarrega tudo para mostrar a nova tarefa
+    } catch (error) {
+        console.error("Erro ao criar tarefa:", error);
+        alert("Falha ao criar a tarefa.");
+    }
+  };
+
+  const handleCreateProject = async (projectData) => {
+    try {
+        await axios.post('http://localhost:3000/api/projects', projectData);
+        setProjectModalOpen(false);
+        fetchAllData(); // Recarrega tudo para mostrar o novo projeto no filtro
+    } catch (error) {
+        console.error("Erro ao criar projeto:", error);
+        alert("Falha ao criar o projeto.");
+    }
+  };
+
   function handleDragEnd({ active, over }) {
     if (!over) return;
-
     const activeTask = allTasks.find(t => t.id === active.id);
-    
     let newStatus = activeTask.status;
     if (over.id === 'column-pending') newStatus = 'A Fazer';
     if (over.id === 'column-inprogress') newStatus = 'Em Andamento';
@@ -111,25 +136,18 @@ function App() {
         setAllTasks((currentTasks) => currentTasks.map(t => 
             t.id === active.id ? { ...t, status: newStatus } : t
         ));
-
         axios.patch(`http://localhost:3000/api/tasks/${active.id}/status`, { status: newStatus })
-            .then(response => console.log('Status atualizado com sucesso!', response.data))
             .catch(error => {
                 console.error('Erro ao atualizar o status:', error);
                 alert('Ocorreu um erro ao salvar a alteração.');
+                fetchAllData();
             });
     }
   }
 
-  // Funções para o modal de nova tarefa (placeholder)
-  const handleOpenTaskModal = () => alert('Funcionalidade de "Nova Tarefa" a ser implementada!');
-  const handleOpenProjectModal = () => alert('Funcionalidade de "Novo Projeto" a ser implementada!');
-
-
   if (loading) return <div>Carregando...</div>;
   if (error) return <div className="error">{error}</div>;
 
-  // Filtra as tarefas para cada coluna com base nos filtros aplicados
   const pendingTasks = filteredTasks.filter(task => task.status === 'A Fazer');
   const inProgressTasks = filteredTasks.filter(task => task.status === 'Em Andamento');
   const completedTasks = filteredTasks.filter(task => task.status === 'Concluído');
@@ -147,8 +165,8 @@ function App() {
             <option value="all">Todos os Usuários</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.nome || u.numero_whatsapp}</option>)}
           </select>
-          <button onClick={handleOpenTaskModal}>+ Nova Tarefa</button>
-          <button onClick={handleOpenProjectModal}>+ Novo Projeto</button>
+          <button onClick={() => setTaskModalOpen(true)}>+ Nova Tarefa</button>
+          <button onClick={() => setProjectModalOpen(true)}>+ Novo Projeto</button>
         </div>
       </header>
       
@@ -159,8 +177,86 @@ function App() {
           <Column id="column-completed" title="🟢 Concluídas" tasks={completedTasks} />
         </div>
       </DndContext>
+
+      <Modal isOpen={isTaskModalOpen} onClose={() => setTaskModalOpen(false)} title="Criar Nova Tarefa">
+        <NewTaskForm users={users} projects={projects} onSubmit={handleCreateTask} onCancel={() => setTaskModalOpen(false)} />
+      </Modal>
+
+      <Modal isOpen={isProjectModalOpen} onClose={() => setProjectModalOpen(false)} title="Criar Novo Projeto">
+        <NewProjectForm onSubmit={handleCreateProject} onCancel={() => setProjectModalOpen(false)} />
+      </Modal>
     </div>
   );
+}
+
+// --- Componentes de Formulário para os Modais ---
+
+function NewTaskForm({ users, projects, onSubmit, onCancel }) {
+    const [titulo, setTitulo] = useState('');
+    const [responsavelId, setResponsavelId] = useState('');
+    const [projetoId, setProjetoId] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!titulo || !responsavelId) {
+            alert('Título e Responsável são obrigatórios.');
+            return;
+        }
+        onSubmit({ titulo, responsavelId: parseInt(responsavelId), projetoId: projetoId ? parseInt(projetoId) : null });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="modal-form">
+            <label>
+                Título da Tarefa:
+                <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} required />
+            </label>
+            <label>
+                Responsável:
+                <select value={responsavelId} onChange={e => setResponsavelId(e.target.value)} required>
+                    <option value="" disabled>Selecione um usuário</option>
+                    {users.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                </select>
+            </label>
+            <label>
+                Projeto:
+                <select value={projetoId} onChange={e => setProjetoId(e.target.value)}>
+                    <option value="">Nenhum</option>
+                    {projects.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                </select>
+            </label>
+            <div className="modal-actions">
+                <button type="button" onClick={onCancel} className="cancel">Cancelar</button>
+                <button type="submit" className="submit">Criar Tarefa</button>
+            </div>
+        </form>
+    );
+}
+
+function NewProjectForm({ onSubmit, onCancel }) {
+    const [nome, setNome] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!nome) {
+            alert('O nome do projeto é obrigatório.');
+            return;
+        }
+        onSubmit({ nome });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="modal-form">
+            <label>
+                Nome do Projeto:
+                <input type="text" value={nome} onChange={e => setNome(e.target.value)} required />
+            </label>
+            <div className="modal-actions">
+                <button type="button" onClick={onCancel} className="cancel">Cancelar</button>
+                <button type="submit" className="submit">Criar Projeto</button>
+            </div>
+        </form>
+    );
 }
 
 export default App;

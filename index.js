@@ -13,9 +13,14 @@ const { findOrCreateUser, setUserName, findUserByName } = require('./userService
 const { createTask, getTasksByUser, updateTaskStatus, editTaskTitle, deleteTask, getTaskSummary } = require('./taskService');
 const { createProject, listProjects, findProjectByName, getActiveProjectCount } = require('./projectService');
 const { ptBR } = require('date-fns/locale');
+const cors = require('cors');
+const apiRoutes = require('./routes/api');
+
 // Inicialização do Express
 const app = express();
 app.use(express.json());
+app.use(cors());
+app.use('/api', apiRoutes);
 
 // ----- CONFIGURAÇÃO - Lendo as variáveis do arquivo .env -----
 const PORT = process.env.PORT || 3000;

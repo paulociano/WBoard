@@ -1,4 +1,4 @@
-# 🤖 Worqboard - Bot de Gestão de Projetos para WhatsApp
+# 🤖 WBoard - Bot de Gestão de Projetos para WhatsApp
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-green.svg)
@@ -10,7 +10,7 @@ Um bot de WhatsApp completo para gestão de equipes e projetos, permitindo criar
 
 ## 🎯 Sobre o Projeto
 
-O Worqboard nasceu da ideia de simplificar a gestão de projetos para pequenas equipes que já utilizam o WhatsApp como principal ferramenta de comunicação. Em vez de alternar entre diferentes aplicativos, o bot centraliza as ações mais comuns de gerenciamento de tarefas (criar, atribuir, atualizar status) diretamente na conversa, agilizando o fluxo de trabalho e mantendo todos na mesma página.
+O WBoard nasceu da ideia de simplificar a gestão de projetos para pequenas equipes que já utilizam o WhatsApp como principal ferramenta de comunicação. Em vez de alternar entre diferentes aplicativos, o bot centraliza as ações mais comuns de gerenciamento de tarefas (criar, atribuir, atualizar status) diretamente na conversa, agilizando o fluxo de trabalho e mantendo todos na mesma página.
 
 Este repositório contém todo o código-fonte do backend da aplicação, construído em Node.js e conectado a um banco de dados PostgreSQL.
 
